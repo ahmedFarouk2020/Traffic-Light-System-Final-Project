@@ -10,14 +10,16 @@
 
 #define MAX_NUM_OF_DEVICES 1
 
-/* Buad rate values (options) */
-#define _9600
-#define _115200
+
+
+/* Data word size */
+#define _8BITS     0
+#define _9BITS     1
 
 typedef struct {
     unsigned char uart_id;// 0-> uart1  1-> uart2   2->uart6
-    unsigned char data_size;// 0:9
-    unsigned char buad_rate;// macros
+    unsigned char data_size;// _8BITS, _9BITS
+    unsigned int buad_rate;// 9600  115200
 
 }Uart_Config;
 

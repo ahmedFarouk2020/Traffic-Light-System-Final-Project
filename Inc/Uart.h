@@ -11,17 +11,19 @@
 
 
 /* APIs Declarations */
+void USART2_Init(void);
+
+void USART2_Transmit(const char* Str);
+
 
 void UART_Init(void);
 
-unsigned char UART_RecvAsync(void);
+unsigned char UART_RecvSync(unsigned char DeviceId);
 
-void UART_Send(unsigned char uartId, unsigned char data);
+void UART_SendSync(unsigned char DeviceId, unsigned char data);
 
-void UART_SendStr(unsigned char uartIdId, char* str);
+void UART_SendStr(unsigned char DeviceId, char* str);
 
 unsigned char UART_GetStatus(void);
-
-
 
 #endif /* INC_UART_H_ */
