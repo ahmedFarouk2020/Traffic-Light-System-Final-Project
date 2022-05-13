@@ -75,12 +75,12 @@ void UART_Init(void)
         }
 
         /* Baud rate definition */
-//        float ClkDivider = CLK/16*ConfigurationList[counter].buad_rate;
-//        unsigned short mantissa = (int)ClkDivider;
-//        unsigned int fraction = (unsigned int)((ClkDivider-(float)mantissa) * 16) ;
-//
-//        UART->BRR = (mantissa<<4 & 0x0ff0) |(fraction & (0x0fU));
-          UART->BRR = 0x683;
+        float ClkDivider = CLK/(16.0*ConfigurationList[counter].buad_rate);
+        unsigned short mantissa = (unsigned short int)ClkDivider;
+        unsigned int fraction = (unsigned int)((ClkDivider-(float)mantissa) * 16 + 0.5) ;
+
+        UART->BRR = (mantissa<<4 & 0x0ff0U) |(fraction & (0x0fU));
+//        UART->BRR = 0x682;
 
         /* Word length 8-bytes */
         UART->CR1 &= ~(1<< USART_CR1_M_Pos); /* clear the bit M */
