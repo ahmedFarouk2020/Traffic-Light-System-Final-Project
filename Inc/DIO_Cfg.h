@@ -2,16 +2,15 @@
  * DIO_Cfg.h
  *
  *  Created on: Mar 23, 2022
- *      Author: moham
+ *      Author: Farouk
  */
 
-// PA15 -> TIM2C1
 
 #ifndef INC_DIO_CFG_H_
 #define INC_DIO_CFG_H_
 
-#define DIO_NUM_OF_CHANNELS               ((unsigned char)1)
-#define DIO_NUM_OF_CHANNELGROUPS          ((unsigned char)16)
+#define DIO_NUM_OF_CHANNELS               ((unsigned char)3)
+#define DIO_NUM_OF_CHANNELGROUPS          ((unsigned char)1)
 #define DIO_MAX_NUM_OF_CHANNELS_IN_GROUP  ((unsigned char)5)
 
 typedef struct
