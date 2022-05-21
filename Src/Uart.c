@@ -5,44 +5,26 @@
  *      Author: Farouk
  */
 
+/******* The rest to be completed
+ *
+ * 1. Test the recieve function
+ *
+ * 2. Enable interrupts and use them with the code
+ *
+ */
 #include "Uart.h"
 #include "Uart_Cfg.h"
 #include "stm32f401xc.h"
+#include "DIO.h"
 
 #define CLK 16000000U
 
 
+extern unsigned char EVD_DataFrame[3];
+extern unsigned char EVD_ReceiveStatus;
+static unsigned char Uart_receive;
+extern unsigned char buffer;
 USART_TypeDef* USARTs[3] = {USART1, USART2, USART6};
-
-
-void USART2_Init(void) {
-//  GPIO_EnableClock(0);
-//  GPIO_Init(0, 2, ALTERNATE_FUN, PUSH_PULL);
-//
-//  GPIOA->AFR[0] &= ~(0xf << 4 * 2);
-//  GPIOA->AFR[0] |= 0x7 << 4 * 2;
-
-
-  RCC->APB1ENR |= 1 << RCC_APB1ENR_USART2EN_Pos;
-
-  USART2->CR1 &= ~(1 << USART_CR1_M_Pos);
-
-  USART2->CR2 &= ~(USART_CR2_STOP);
-
-  USART2->CR1 &= ~(1 << USART_CR1_OVER8_Pos);
-
-  USART2->BRR = 0x683;  // Baud Rate 9600
-
-  /* Enable Transmission block */
-  USART2->CR1 |= (1 << USART_CR1_TE_Pos);
-
-  // /* Enable Receive block */
-  // USART2->CR1 |= (1 << USART_CR1_RE_Pos);
-
-  /* Enable USART2 */
-  USART2->CR1 |= (1 << USART_CR1_UE_Pos);
-}
-
 
 
 
@@ -80,17 +62,60 @@ void UART_Init(void)
         unsigned int fraction = (unsigned int)((ClkDivider-(float)mantissa) * 16 + 0.5) ;
 
         UART->BRR = (mantissa<<4 & 0x0ff0U) |(fraction & (0x0fU));
-//        UART->BRR = 0x682;
 
         /* Word length 8-bytes */
         UART->CR1 &= ~(1<< USART_CR1_M_Pos); /* clear the bit M */
         UART->CR1 |= (ConfigurationList[counter].data_size<< USART_CR1_M_Pos); /* put the value into the bit M */
 
+        /* Enable selected interrupts */
+        UART->CR1 &= ~(7<<USART_CR1_RXNEIE_Pos); // clear interrupts fields
+        UART->CR1 |= ConfigurationList[counter].needed_interrupts.RXNE<< USART_CR1_RXNEIE_Pos;
+        UART->CR1 |= ConfigurationList[counter].needed_interrupts.TC<< USART_CR1_TCIE_Pos;
+        UART->CR1 |= ConfigurationList[counter].needed_interrupts.TXE<< USART_CR1_TXEIE_Pos;
 
-        /* transmitter enable */
+        /* Uart mode selection */
         UART->CR1 |= 1<< USART_CR1_TE_Pos;
-        /* receiver enable */
-        UART->CR1 |= 1<< USART_CR1_RE_Pos;
+        switch(ConfigurationList[counter].uart_mode)
+        {
+            case 0: // Both
+            {
+                UART->CR1 |= 1<< USART_CR1_TE_Pos;
+                UART->CR1 |= 1<< USART_CR1_RE_Pos;
+            }
+            break;
+            case 1: // transmitter
+            {
+                UART->CR1 |= 1<< USART_CR1_TE_Pos;
+            }
+            break;
+            case 2: // receiver
+            {
+                UART->CR1 |= 1<< USART_CR1_RE_Pos;
+            }
+            break;
+            default: /* Error */ break;
+        }
+
+        /* Enable global interrupt flag */
+        switch(ConfigurationList[counter].uart_id)
+        {
+            case 0:
+            {
+                NVIC_EnableIRQ(USART1_IRQn);
+            }
+            break;
+            case 1:
+            {
+                NVIC_EnableIRQ(USART2_IRQn);
+            }
+            break;
+            case 2:
+            {
+                NVIC_EnableIRQ(USART6_IRQn);
+            }
+            break;
+            default: /* Error */ break;
+        }
 
         /* Enable UART */
         UART->CR1 |= 1<< USART_CR1_UE_Pos;
@@ -99,13 +124,26 @@ void UART_Init(void)
 }
 
 
-unsigned char UART_RecvSync(unsigned char DeviceId)
+unsigned char UART_RecvAsync(unsigned char DeviceId)
 {
     if(DeviceId >= MAX_NUM_OF_DEVICES)
     {
         USART_TypeDef* UART = USARTs[ConfigurationList[DeviceId].uart_id];
+        return UART->DR;
+    }
+    return 0xff; /* Error */
+}
+
+
+unsigned char UART_RecvSync(unsigned char DeviceId)
+{
+    if(DeviceId < MAX_NUM_OF_DEVICES)
+    {
+
+        USART_TypeDef* UART = USARTs[ConfigurationList[DeviceId].uart_id];
         /* Wait until receive buffer is not empty */
         while( !(UART->SR & (1U<< USART_SR_RXNE_Pos)));
+
         return UART->DR;
     }
     return 0xff; /* Error */
@@ -117,7 +155,7 @@ void UART_SendSync(unsigned char DeviceId, unsigned char data)
     if(DeviceId < MAX_NUM_OF_DEVICES)
     {
         USART_TypeDef* UART = USARTs[ConfigurationList[DeviceId].uart_id];
-        UART->DR = data;
+        UART->DR = (signed char)data;
         /* Wait until tranfer complete flag is set */
         while( !(UART->SR & (1U<< USART_SR_TC_Pos)));
 
@@ -150,3 +188,30 @@ unsigned char UART_GetStatus(void)
 }
 
 
+
+/*
+ * We can consider this design for Uart or make the ISR tranfer data to EVD and we only check if 3 frame arrives to inform EVD
+ */
+void UART_MainFunction(void) // highest priority
+{
+    while(1)
+    {
+        unsigned char i;
+
+        for(i=0; i<3; i++)
+        {
+            // interrupt set(increment) a flag "Uart_receive" -> wait event
+            // clear event
+            EVD_DataFrame[i] = UART_RecvAsync(0);
+        }
+        EVD_ReceiveStatus = 1; // set event
+        // wait "Event" DataFrame is received
+        EVD_ReceiveStatus = 0;
+    }
+}
+
+void USART2_IRQHandler(void)
+{
+    buffer = USART2->DR;
+    USART2->SR &= ~(1<< USART_SR_RXNE_Pos);
+}

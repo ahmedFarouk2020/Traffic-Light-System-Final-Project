@@ -26,13 +26,13 @@ void DIO_Init(void)
          /*verify Port Id*/
          if(PortId < NUM_OF_PORTS)
          {
-             unsigned char PinNumber = DIO_ConfigParam[Loop].PinNum;
         	 /*Enable clock*/
         	 RCC->AHB1ENR |= (1<<PortId);
         	 GPIO_TypeDef * GPIOx =Ports[PortId];
+
+             unsigned char PinNumber = DIO_ConfigParam[Loop].PinNum;
         	 /*this  bit always = 0 in input or output mode */
              GPIOx->MODER &= ~(1<<(PinNumber*2+1));
-
 
         	 /*if output or AF*/
              unsigned char port_direction = DIO_ConfigParam[Loop].PortDirection;
@@ -118,10 +118,17 @@ void DIO_ChannelWrite(unsigned char ChannelId, unsigned char Data)
 	{
 		unsigned char PortId;
 		PortId = DIO_ConfigParam[ChannelId].PortId;
-		if(DIO_ConfigParam[ChannelId].PortDirection)
+		if(DIO_ConfigParam[ChannelId].PortDirection == 1)
 		{
 			GPIO_TypeDef * GPIOx =Ports[PortId];
-			GPIOx->ODR|= ((Data&1)<< (DIO_ConfigParam[ChannelId].PinNum));
+			if(Data != 0)
+			{
+			    GPIOx->ODR|= (1<< (DIO_ConfigParam[ChannelId].PinNum));
+			}
+			else
+			{
+			    GPIOx->ODR &= ~(1<< (DIO_ConfigParam[ChannelId].PinNum));
+			}
 		}
 		else // INPUT -> do nothing
 		{

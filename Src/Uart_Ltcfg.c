@@ -9,10 +9,10 @@
 
 const Uart_Config ConfigurationList[MAX_NUM_OF_DEVICES] =
 {
-   {
-        1,
-        _8BITS,
-        9600
-   }
+    1,
+    _8BITS,
+    9600,
+    0,
+    {0,0,0}
 };
 
