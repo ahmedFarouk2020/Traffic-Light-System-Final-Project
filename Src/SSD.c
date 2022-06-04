@@ -18,7 +18,7 @@ static unsigned char SSD_ActiveDisplay; // id of the active display
 
 void SSD_Init(void)
 {
-    SSD_Data = 60;
+    SSD_Data = 0;
     SSD_ActiveDisplay = 0;
 }
 
@@ -101,7 +101,10 @@ void SSD_Write(unsigned char display_id, unsigned char data)
     }
 }
 
-
+void SSD_Display(unsigned char number)
+{
+    SSD_Data = number;
+}
 
 void SSD_MainFunction(void)
 {

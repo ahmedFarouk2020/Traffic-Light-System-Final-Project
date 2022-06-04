@@ -13,6 +13,8 @@ void SSD_Init(void);
 
 void SSD_Write(unsigned char display_id, unsigned char data);
 
+void SSD_Display(unsigned char number);
+
 void SSD_MainFunction();
 
 #endif /* INC_SSD_H_ */
