@@ -10,7 +10,7 @@ unsigned char EVD_ReceiveStatus;
 unsigned char EVD_ParserStatus;
 unsigned char EVD_EmergencyState;
 unsigned char buffer;
-
+extern unsigned char App_EmergencyFlag;
 
 void EVD_Init(void)
 {
@@ -30,6 +30,10 @@ void EVD_ParseFrame(unsigned char frame[])
         if( (EVD_DataFrame[1] == 0x02) || (EVD_DataFrame[1] == 0x03) ) {
             // set emergency
             EVD_EmergencyState = 1;
+        }
+        else
+        {
+            EVD_EmergencyState = 0;
         }
     }
 }
@@ -51,6 +55,7 @@ void EVD_MainFunction(void)
 
     if(state == 1) /* Emergency? */
     {
-        // set timer 10 sec and once timer expired the callback zero the emergency
+        App_EmergencyFlag = 1;
+        // set timer 10 sec and once timer expired the callback zero the emergency (wait event) App_EmergencyFlag=0
     }
 }
