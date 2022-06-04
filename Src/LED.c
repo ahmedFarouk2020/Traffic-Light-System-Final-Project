@@ -8,9 +8,9 @@
 #include "LED_Cfg.h"
 #include "DIO.h"
 
-#define GREEN   0
-#define RED     1
-#define YELLOW  2
+#define LED_GREEN   0
+#define LED_RED     1
+#define LED_YELLOW  2
 
 unsigned char Led_Color;
 
