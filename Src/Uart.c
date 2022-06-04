@@ -212,6 +212,17 @@ void UART_MainFunction(void) // highest priority
 
 void USART2_IRQHandler(void)
 {
-    buffer = USART2->DR;
+    static unsigned char count = 0;
+
+    EVD_DataFrame[count] = USART2->DR;
+
     USART2->SR &= ~(1<< USART_SR_RXNE_Pos);
+
+    count = (count + 1)%3;
+
+    if(cout == 0)
+    {
+        EVD_ReceiveStatus = 1;
+    }
+
 }
