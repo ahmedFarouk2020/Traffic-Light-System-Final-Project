@@ -1,10 +1,5 @@
-/*
- * Button.c
- *
- *  Created on: May 22, 2022
- *      Author: Farouk
- */
-
+#include "Button.h"
+#include "ADC.h"
 
 unsigned char Button_Request;
 extern unsigned char App_PedestrianReq;
@@ -14,10 +9,12 @@ void Button_Init(void)
     Button_Request = 0;
 }
 
-unsigned char Button_GetLevel(unsigned char button_id)
+unsigned char Button_GetLevel(void)
 {
-    unsigned char button_reading = Adc_GetReading();
-    if( (button_level > X)  && (button_level< X) )
+    unsigned int digital_reading = ADC_GetReading();
+//    float analog_value = digital_reading * (5 / 4096) ;
+
+    if( digital_reading < 2048 )
     {
         return 1;
     }
@@ -27,11 +24,15 @@ unsigned char Button_GetLevel(unsigned char button_id)
 
 void Button_MainFunction(void) // 10 ms
 {
-    static count = 0;
-    unsigned char button_level = Button_GetLevel(button_ID);
+    static int count = 0;
+    unsigned char button_level = Button_GetLevel();
     if(button_level == 1)
+	{
+		count = (count+1) % 11 ;
+	}
+    else
     {
-        count = (cout+1)%11;
+    	count = 0 ;
     }
     if(count == 10)
     {
@@ -39,7 +40,12 @@ void Button_MainFunction(void) // 10 ms
     }
     else
     {
-        Button_Request = 0;
+
     }
 
 }
+
+
+
+
+
