@@ -8,9 +8,12 @@
 #include "DIO.h"
 #include "Adc.h"
 
-extern unsigned char Button_Request;
-//extern void vTaskSuspendAll(void);
-//extern void xTaskResumeAll(void);
+
+#define IS_IN_PRESSED_REGION(reading)  ((reading) < 2200)
+
+extern unsigned char App_ButtonRequest;
+
+
 
 //void Get_ButtonReq(unsigned char *value) {
 //    vTaskSuspendAll();
@@ -24,10 +27,6 @@ extern unsigned char Button_Request;
 //    xTaskResumeAll();
 //}
 
-void Button_Init(void)
-{
-    Button_Request = 0;
-}
 
 //unsigned char Button_GetLevel(void)
 //{
@@ -45,7 +44,7 @@ unsigned char Button_GetLevel(void)
 {
     unsigned int digital_reading = ADC_GetReading();
 
-    if( digital_reading < 2200 )
+    if(  IS_IN_PRESSED_REGION(digital_reading) )
     {
         return 1;
     }
@@ -53,59 +52,26 @@ unsigned char Button_GetLevel(void)
 }
 
 
-//unsigned char Button_GetLevel(unsigned char button_id)
-//{
-////    unsigned char button_reading = Adc_GetReading();
-//    unsigned char button_reading;
-//    if( button_reading > 1000 )
-//    {
-//        return 1;
-//    }
-//    return 0;
-//}
-
-
-//void Button_MainFunction(void) // 10 ms
-//{
-//    static unsigned char count = 0;
-//
-//
-//    unsigned char button_level = Button_GetLevel(0);
-//
-//    if(button_level == 1)
-//    {
-//        if(count == 10) {}
-//        else
-//        {
-//            count = (count+1)%11;
-//        }
-//    }
-//    else
-//    {
-//        count = 0;
-//    }
-//
-//    if(count == 10)
-//    {
-//        Button_Request = 1;
-//    }
-//    else
-//    {
-//        Button_Request = 0;
-//    }
-//
-//}
-
 void Button_MainFunction(void) // 10 ms
 {
+    static unsigned char count = 0;
     unsigned char button_reading = Button_GetLevel();
     if(button_reading == 1)
     {
-        Button_Request = 1;
+        count = (count<10)? (count+1) : 10;
     }
     else
     {
-        Button_Request = Button_Request | 0;
+        count = 0;
+    }
+
+    if(count == 10)
+    {
+        App_ButtonRequest = 1; // higher priority task (no protection needed)
+    }
+    else
+    {
+        App_ButtonRequest = App_ButtonRequest | 0; // higher priority task (no protection needed)
     }
     DIO_ChannelWrite(15,button_reading);
 

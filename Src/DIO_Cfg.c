@@ -9,7 +9,7 @@
 
 const DIO_ChannelConfigType DIO_ConfigParam[DIO_NUM_OF_CHANNELS] =
 {
-    {/* led1 */
+    {/* led0 */
      1,
      10,
      1,/* OUT */

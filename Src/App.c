@@ -15,17 +15,34 @@
 #define APP_YELLOW_STATE     2
 
 /* External Variables */
-extern unsigned char Button_Request;
+unsigned char App_ButtonRequest;
+
+extern void vTaskSuspendAll(void);
+extern void xTaskResumeAll(void);
+
+void Get_ButtonReq(unsigned char *value) {
+    vTaskSuspendAll();
+    *value = App_ButtonRequest;
+    xTaskResumeAll();
+}
+
+void Set_ButtonReq(void) {
+    vTaskSuspendAll();
+    App_ButtonRequest = 1;
+    xTaskResumeAll();
+}
+void Reset_ButtonReq(void) {
+    vTaskSuspendAll();
+    App_ButtonRequest = 0;
+    xTaskResumeAll();
+}
+
 extern unsigned char Led_Color;
 
 /* Global Variables */
 unsigned char App_EmergencyFlag;
 
-extern void vTaskSuspendAll(void);
-extern void xTaskResumeAll(void);
-extern void Get_ButtonReq(unsigned char *value);
-extern void Set_ButtonReq(void);
-extern void Reset_ButtonReq(void);
+
 
 void Get_AppEmergencyFlag(unsigned char *buffer) {
     vTaskSuspendAll();
@@ -41,6 +58,7 @@ unsigned char App_Counter;
 
 void App_Init(void)
 {
+    App_ButtonRequest = 0;
     App_Counter = 0;
     App_EmergencyFlag = 0;
     App_CurrentState = APP_GREEN_STATE;

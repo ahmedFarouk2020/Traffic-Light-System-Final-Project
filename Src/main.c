@@ -12,7 +12,11 @@
 #include "timers.h"
 #include "semphr.h"
 #include "task.h"
+#include "event_groups.h"
 
+#define BIT0 (1<<0)
+#define BIT1 (1<<1)
+#define BIT2 (1<<2)
 
 /*
  * Everything is fine when timing constrains is not so hard
@@ -22,27 +26,11 @@
 
 SemaphoreHandle_t s;
 TimerHandle_t t;
+EventGroupHandle_t eventGroup_handle;
 
-unsigned char Button_Request;
 
 extern void EVD_ResetEmergency();
 
-void Get_ButtonReq(unsigned char *value) {
-    vTaskSuspendAll();
-    *value = Button_Request;
-    xTaskResumeAll();
-}
-
-void Set_ButtonReq(void) {
-    vTaskSuspendAll();
-    Button_Request = 1;
-    xTaskResumeAll();
-}
-void Reset_ButtonReq(void) {
-    vTaskSuspendAll();
-    Button_Request = 0;
-    xTaskResumeAll();
-}
 
 void TASK_Led_App(void *ptr) // period = 1 second
 {
@@ -80,7 +68,7 @@ void TASK_EVD(void *ptr)
 
     while(1) {
 
-        xSemaphoreTake(s, portMAX_DELAY);
+        xEventGroupWaitBits(eventGroup_handle,BIT0 ,pdTRUE,pdTRUE,(TickType_t)portMAX_DELAY );
 
         EVD_MainFunction();
 
@@ -115,7 +103,6 @@ int main()
     ADC_Init();
     UART_Init();
     Led_Init();
-    Button_Init();
     SSD_Init();
     EVD_Init();
     App_Init();
@@ -128,7 +115,9 @@ int main()
 
     t = xTimerCreate("Timer",pdMS_TO_TICKS(10000),pdFALSE,(void*) 0,(TimerCallbackFunction_t)EVD_ResetEmergency);
 
+    eventGroup_handle = xEventGroupCreate();
     vSemaphoreCreateBinary(s);
+
     xTaskCreate(TASK_Led_App, "TASK_Led_App", ( unsigned short ) 350, NULL, 3, &handle_Led_App);
     xTaskCreate(TASK_EVD, "TASK_EVD", ( unsigned short ) 400, NULL, 1, &handle_EVD);
     xTaskCreate(TASK_SSD, "TASK_SSD", ( unsigned short ) 300, NULL, 4, &handle_SSD);
@@ -145,13 +134,17 @@ void USART2_IRQHandler(void)
 {
 
     BaseType_t HP_Task = pdFALSE;
+    BaseType_t Result = pdFALSE;
 
-    xSemaphoreGiveFromISR(s,&HP_Task);
+    Result = xEventGroupSetBitsFromISR(eventGroup_handle, BIT0, &HP_Task );
 
     EVD_DataFrame[1] = USART2->DR;
     USART2->SR &= ~(1<< USART_SR_RXNE_Pos);
 
-    portYIELD_FROM_ISR( HP_Task );
+    if( Result != pdFAIL )
+    {
+        portYIELD_FROM_ISR( HP_Task );
+    }
 }
 //void USART2_IRQHandler(void)
 //{

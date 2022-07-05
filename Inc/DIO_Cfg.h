@@ -9,7 +9,7 @@
 #ifndef INC_DIO_CFG_H_
 #define INC_DIO_CFG_H_
 
-#define DIO_NUM_OF_CHANNELS               ((unsigned char)17)
+#define DIO_NUM_OF_CHANNELS               ((unsigned char)16)
 #define DIO_NUM_OF_CHANNELGROUPS          ((unsigned char)2)
 #define DIO_MAX_NUM_OF_CHANNELS_IN_GROUP  ((unsigned char)8)
 
