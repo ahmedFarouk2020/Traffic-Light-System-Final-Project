@@ -68,14 +68,14 @@ void TASK_EVD(void *ptr)
 
     while(1) {
 
-        xEventGroupWaitBits(eventGroup_handle,BIT0 ,pdTRUE,pdTRUE,(TickType_t)portMAX_DELAY );
+        xEventGroupWaitBits(eventGroup_handle,BIT0|BIT1|BIT2 ,pdTRUE,pdTRUE,(TickType_t)portMAX_DELAY );
 
         EVD_MainFunction();
+        DIO_ChannelWrite(15,1);
 
         if(App_EmergencyFlag == 1) // Emergency?
         {
             xTimerStart( t, pdMS_TO_TICKS(10000) );
-            DIO_ChannelWrite(15,1);
         }
     }
 }
@@ -132,19 +132,36 @@ int main()
 
 void USART2_IRQHandler(void)
 {
+    static unsigned char frameId = 0;
 
-    BaseType_t HP_Task = pdFALSE;
-    BaseType_t Result = pdFALSE;
-
-    Result = xEventGroupSetBitsFromISR(eventGroup_handle, BIT0, &HP_Task );
-
-    EVD_DataFrame[1] = USART2->DR;
-    USART2->SR &= ~(1<< USART_SR_RXNE_Pos);
-
-    if( Result != pdFAIL )
+    if(xEventGroupGetBitsFromISR(eventGroup_handle) != 0x07)
     {
-        portYIELD_FROM_ISR( HP_Task );
+        vTaskSuspendAll();
+
+        BaseType_t HP_Task = pdFALSE;
+        BaseType_t Result = pdFALSE;
+
+        Result = xEventGroupSetBitsFromISR(eventGroup_handle, (1<<frameId), &HP_Task );
+
+        EVD_DataFrame[frameId] = USART2->DR;
+        USART2->SR &= ~(1<< USART_SR_RXNE_Pos);
+
+        frameId = (frameId + 1 ) % 3;
+
+        xTaskResumeAll();
+
+        if( Result != pdFAIL )
+        {
+            portYIELD_FROM_ISR( HP_Task );
+        }
+
+        DIO_ChannelWrite(15,1);
     }
+    else
+    {
+        DIO_ChannelWrite(15,0);
+    }
+
 }
 //void USART2_IRQHandler(void)
 //{

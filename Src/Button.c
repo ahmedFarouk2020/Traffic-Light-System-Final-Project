@@ -14,32 +14,6 @@
 extern unsigned char App_ButtonRequest;
 
 
-
-//void Get_ButtonReq(unsigned char *value) {
-//    vTaskSuspendAll();
-//    *value = Button_Request;
-//    xTaskResumeAll();
-//}
-//
-//void Set_ButtonReq(void) {
-//    vTaskSuspendAll();
-//    Button_Request = 1;
-//    xTaskResumeAll();
-//}
-
-
-//unsigned char Button_GetLevel(void)
-//{
-//    int button_reading;
-//    DIO_ChannelRead(12, (unsigned short int*)&button_reading);
-//
-//    if( button_reading == 0 ) // active low
-//    {
-//        return 1;
-//    }
-//    return 0;
-//}
-
 unsigned char Button_GetLevel(void)
 {
     unsigned int digital_reading = ADC_GetReading();

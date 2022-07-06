@@ -6,6 +6,7 @@
  */
 
 #include "EVD.h"
+#include "DIO.h"
 
 extern void DIO_ChannelWrite(unsigned char ChannelId, unsigned char Data);// for debugging
 
@@ -28,32 +29,33 @@ void EVD_Init(void)
 /*
  * Check if the data is meaningful and check for vehicle ID
  */
-//void EVD_ParseFrame(unsigned char frame[])
-//{
-//    if(EVD_DataFrame[0] == 'S'/*0xAA*/ && EVD_DataFrame[2] == 'E'/*0x55*/)
-//    {
-//        if( (EVD_DataFrame[1] == '2'/*0x02*/) || (EVD_DataFrame[1] == '3'/*0x03*/) ) {
-//            // set emergency
-//            EVD_EmergencyState = 1;
-//        }
-//        else
-//        {
-//            EVD_EmergencyState = 0;
-//        }
-//    }
-//}
-
 void EVD_ParseFrame(unsigned char frame[])
 {
-    if( (EVD_DataFrame[1] == '2'/*0x02*/) || (EVD_DataFrame[1] == '3'/*0x03*/) ) {
-        // set emergency
-        EVD_EmergencyState = 1;
-    }
-    else
+    if(EVD_DataFrame[0] == 'S'/*0xAA*/ && EVD_DataFrame[2] == 'U'/*0x55*/)
     {
-        EVD_EmergencyState = 0;
+        if( (EVD_DataFrame[1] == '2'/*0x02*/) || (EVD_DataFrame[1] == '3'/*0x03*/) ) {
+            // set emergency
+            EVD_EmergencyState = 1;
+
+        }
+        else
+        {
+            EVD_EmergencyState = 0;
+        }
     }
 }
+
+//void EVD_ParseFrame(unsigned char frame[])
+//{
+//    if( (EVD_DataFrame[1] == '2'/*0x02*/) || (EVD_DataFrame[1] == '3'/*0x03*/) ) {
+//        // set emergency
+//        EVD_EmergencyState = 1;
+//    }
+//    else
+//    {
+//        EVD_EmergencyState = 0;
+//    }
+//}
 
 
 void EVD_ResetEmergency() /* Callback from timer */

@@ -105,21 +105,19 @@ void SSD_Write(unsigned char display_id, unsigned char data)
 
 void SSD_Display(unsigned char number)
 {
-    vTaskSuspendAll();
     SSD_Data = number;
-    xTaskResumeAll();
 }
 
 void SSD_MainFunction(void)
 {
+    vTaskSuspendAll();
+    unsigned char data = SSD_Data; // critical section
+    xTaskResumeAll();
+
     // disable running display
     SSD_Write(SSD_ActiveDisplay, SSD_DISABLE);
 
     SSD_ActiveDisplay = (SSD_ActiveDisplay + 1)%2;
-
-    vTaskSuspendAll();
-    unsigned char data = SSD_Data; // critical section
-    xTaskResumeAll();
 
     if(SSD_ActiveDisplay == 1) // a7ad
     {
